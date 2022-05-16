@@ -1,16 +1,30 @@
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Scanner;
 
-
-import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class AntiHoardingCLI {
+
+    static Database con;
+    static Consumer cons;
+    static LocalDistributor Ld;
+    static Importer imp;
+
+    static String Uid;
+
+
+
 
 
     public static void main(String[] args) {
 
         int choice, choice2;
 
-         showMenu(0, 'q');
+        System.out.println("Hello and Welcome to AHS\n");
+         showMenu(0);
 
 
 
@@ -19,124 +33,227 @@ public class AntiHoardingCLI {
 
 
 
-    public static void showMenu(int type, char option) {
-        int choice = 0, choice2;
-        char choice3  , choice4;
+    public static void showMenu(int type) {
 
+        String  user, pass;
+        int amount, option, login,Iid,LDid;
+        Scanner input = new Scanner(System.in);
         if(type == 0) {
-            do {
-                System.out.println("Hello And Welcome !!\n");
-                System.out.println("Choose an option below to continue :\nI am a :\n");
-                System.out.println("1.Consumer\n");
-                System.out.println("2.Local Distributor\n");
-                System.out.println("3.Importer\n");
-                System.out.println("Enter Option :\n");
+            System.out.println("Enter User ID : \n");
+            Uid  = input.nextLine();
+            System.out.println("Enter User Password : \n");
+            pass = input.nextLine();
 
-                Scanner keyboard = new Scanner(System.in);
-                choice = keyboard.nextInt();
-            }while(choice >3 || choice <1);
-             showMenu(choice, 'q');
-        }else if(type == 1) {
-            if(option == 'q') {
-                do {
-                    System.out.println("Hello Consumer !!\n");
-                    System.out.println("Choose an option below to continue :\nI am a :\n");
-                    System.out.println("a.Login\n");
-                    System.out.println("b.Register.\n");
-                    System.out.println("Enter Option :\n");
+            login = login(Uid, pass);
 
-                    Scanner keyboard = new Scanner(System.in);
-                    choice3 = keyboard.next().charAt(0);
-                } while (choice3 != 'a' && choice3 != 'b');
-                showMenu(type, choice3);
-            }else{
-                Scanner input = new Scanner(System.in);
-
-                int sellerID, amount;
-                String  user,pass;
-                if(option == 'a') {
-
-                        System.out.println("Enter your User ID:\n");
-                        user = input.nextLine();
-                        System.out.println("Enter your Password:\n");
-                        pass = input.nextLine();
-
-                        Consumer cons =new Consumer(user,pass);
-
-                        if(cons.login()){
-                            System.out.println("Enter Seller ID:\n");
-                            sellerID = input.nextInt();
-                            System.out.println("Enter Amount: \n");
-                            amount = input.nextInt();
-
-                           if(cons.buy(sellerID, amount))
-                            {
-                                System.out.println();
-                            }
-
-                        }else {
-                            System.out.println("Wrong Details Try Again");
-                            showMenu(type, 'a');
-                        }
-
-
-
+            if(login != 0) {
+                if(login == 1) {
+                     cons = new Consumer(Uid, pass);
+                     System.out.println("Welcome : "+ cons.getName()+"\n");
+                     showMenu(2);
+                }else if(login == 2) {
+                    Ld = new LocalDistributor(Uid, pass);
+                    showMenu(3);
+                }else if(login == 3){
+                    imp = new Importer(Uid);
+                    showMenu(6);
                 }
 
+            }else{
+                System.out.println("Wrong Details !! Try Again\n");
+                showMenu(0);
             }
+
+
+        }else if(type == 1) {
+
+
+           if( cons.checkWallet()) {
+               Scanner input2 = new Scanner(System.in);
+
+               System.out.println("Enter Fuel Litres : \n");
+               amount = input.nextInt();
+               System.out.println("Enter Seller ID: \n");
+               LDid = input2.nextInt();
+               cons.buy(LDid, amount);
+               showMenu(2);
+           }else{
+               System.out.println("You Have Insufficient Funds To Buy Fuel !!\nVisit an agent to top up\n");
+               showMenu(2);
+           }
 
         }else if(type == 2) {
 
+
             do {
-                System.out.println("Hello Local Distributor !!\n");
-                System.out.println("Choose an option below to continue :\nI am a :\n");
-                System.out.println("a.Login\n");
-                System.out.println("b.Register\n");
-                System.out.println("Enter Option :\n");
+                System.out.println("Choose one option below :\n");
+                System.out.println("1.Buy Fuel\n");
+                System.out.println("2.Check Wallet Balance\n");
+                System.out.println("3.Exit\n");
+                option = input.nextInt();
+            } while (option < 1 || option > 3);
 
-                Scanner keyboard = new Scanner(System.in);
-                choice3 = keyboard.next().charAt(0);;
-                if(choice3 == 'a' || choice3 == 'b'){
-                    break;
-                }
-            }while(choice3 != 'a' && choice3 != 'b');
-            //LocalDistributor.dosomething
-        }else if(type == 3){
+            if (option == 1){
+                showMenu(1);
+            }else if(option == 2){
 
-            if(option == 'q') {
-                do {
-                    System.out.println("Hello Importer\n");
-                    System.out.println("Choose an option below to continue :\nI am a :\n");
-                    System.out.println("a.Login\n");
-                    System.out.println("b.Register\n");
-                    System.out.println("Enter Option :\n");
+                System.out.println("Your Wallet Balance :"+cons.getWalletBAlance());
+                showMenu(2);
+            }else {
+                System.out.println("Bye !!");
+                showMenu(0);
+            }
+            option = 0;
+        }else if(type == 3) { //Local Distributor Home Interface
 
-                    Scanner keyboard = new Scanner(System.in);
-                    choice3 = keyboard.next().charAt(0);
-                    ;
-                    System.out.println(choice3);
+            do {
+                System.out.println("Choose one option below :\n");
+                System.out.println("1.Restock \n");
+                System.out.println("2.Topup Client\n");
+                System.out.println("3.Check Wallet Balance\n");
+                System.out.println("4.Check Stock Level\n");
+                System.out.println("5.Exit\n");
+                option = input.nextInt();
+            }while (option < 1 || option > 5);
 
-
-                } while (choice3 != 'a' && choice3 != 'b');
-                showMenu(3, choice3);
-            }else{
-                if(option == 'a'){
-
-
-                }else{
-
-                }
+            if(option == 1){
+                showMenu(4);
+            }else if(option == 2) {
+                showMenu(5);
+            }else if (option == 3){
+                System.out.println("Your Balance Is :"+Ld.checkWallet());
+                showMenu(3);
+            }else if(option == 4){
+               System.out.println("Your Stock Level Is: "+Ld.getStock());
+                showMenu(3);
+            }else {
+                showMenu(0);
             }
 
+        }else if(type == 4) {
+            amount = 0;Iid=0;
+            Scanner input2 = new Scanner(System.in);
+            do {
+
+                System.out.println("Enter Importer ID : \n");
+                Iid = input2.nextInt();
+                System.out.println("Enter Amount :\n");
+                amount = input.nextInt();
+            }while ( Iid ==0 && amount == 0);
+System.out.println(Iid+"    "+amount);
+           if (Ld.checkImporter_stock(Iid, amount) > 0) {
+               System.out.println(Ld.checkImporter_stock(Iid,amount));
+               Ld.restock(amount, Iid);
+               showMenu(3);
+           }else{
+               
+               System.out.println("Restock Error!!\n");
+               showMenu(3);
+           }
+
+
+
+
+
+        }else if (type == 5) {
+
+            System.out.println("Enter Consumer ID:\n");
+            String Cid = input.nextLine();
+            System.out.println("Enter TopUp Amount :\n");
+            int Camount = input.nextInt();
+
+            if(Ld.topup(Camount,Cid)){
+                System.out.println("Topup Successfull");
+                showMenu(3);
+            }else {
+                System.out.println("Topup failed !! Try Again\n");
+                showMenu(5);
+            }
+
+
+        }else if (type == 6){
+            System.out.println("Choose One Option Below :\n");
+            System.out.println("1.Import Fuel\n");
+            System.out.println("2.Check Stock Level\n");
+            System.out.println("3.Check Wallet Balance\n");
+            System.out.println("4.Topup Distributor\n");
+            System.out.println("5.Exit\n");
+
+            option = input.nextInt();
+
+            if(option == 1){
+                showMenu(7);
+            }else if (option == 2){
+                System.out.println("Your Stock Level : "+imp.getStock_level());
+                showMenu(6);
+            }else if (option == 3){
+                System.out.println("Your Wallet Balance : "+imp.getBal());
+                showMenu(6);
+            }else if (option == 4){
+                showMenu(8);
+            }else{
+                showMenu(0);
+            }
+        }else if (type == 7){
+            int nestck;
+            System.out.println("Enter New Stock :");
+            nestck = input.nextInt();
+
+            imp.newImport(nestck);
+
+            showMenu(6);
+
+        }else if (type == 8){
+            System.out.println("Enter Distributor ID: \n");
+            LDid = input.nextInt();
+            System.out.println("Enter TopUp Amount :\n");
+            amount = input.nextInt();
+
+            imp.topUp(LDid, amount);
+            showMenu(6);
         }
+    }
+
+    public static int checkType(String Uid) {
+
+            return 1;
 
     }
 
-    public boolean login(int type, int Uid, String pass) {
+    public static int login(String Uid, String Password) {
 
-        if(type == 1 ){
+        System.out.println("\nVerifying , Please wait !!\n");
+        con = new Database();
+        PreparedStatement ps;
+        ResultSet rs;
+        int user_type;
 
+        String query = "SELECT * FROM `Users` WHERE `Uid` =? AND `pass` =? AND  `login_status`=?";
+
+        try {
+            ps = Database.Connect().prepareStatement(query);
+
+            ps.setString(1, Uid);
+            ps.setString(2, Password);
+            ps.setInt(3,0);
+
+            rs = ps.executeQuery();
+            if(rs.next()) {
+
+
+                return rs.getInt("user_type");
+            }else{
+                return 0;
+            }
+
+
+        } catch (SQLException e) {
+            System.err.println("Got an exception!");
+            System.err.println(e.getMessage());
+
+            return 0;
         }
-        return true;
+
+
     }
 }
