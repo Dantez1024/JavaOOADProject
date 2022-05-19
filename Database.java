@@ -5,6 +5,7 @@ public class Database {
 
     Connection con;
 
+    //constructor
     public Database() {
         Connect();
     }

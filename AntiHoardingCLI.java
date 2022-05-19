@@ -12,8 +12,9 @@ public class AntiHoardingCLI {
     static Consumer cons;
     static LocalDistributor Ld;
     static Importer imp;
+    static Admin adm;
 
-    static String Uid;
+    static String Uid="";
 
 
 
@@ -39,6 +40,9 @@ public class AntiHoardingCLI {
         int amount, option, login,Iid,LDid;
         Scanner input = new Scanner(System.in);
         if(type == 0) {
+            if(Uid != "") {
+                logout(Uid);
+            }
             System.out.println("Enter User ID : \n");
             Uid  = input.nextLine();
             System.out.println("Enter User Password : \n");
@@ -57,6 +61,9 @@ public class AntiHoardingCLI {
                 }else if(login == 3){
                     imp = new Importer(Uid);
                     showMenu(6);
+                }else if(login == 4){
+                    adm = new Admin(Uid);
+                    showMenu(9);
                 }
 
             }else{
@@ -100,7 +107,6 @@ public class AntiHoardingCLI {
                 System.out.println("Your Wallet Balance :"+cons.getWalletBAlance());
                 showMenu(2);
             }else {
-                System.out.println("Bye !!");
                 showMenu(0);
             }
             option = 0;
@@ -146,7 +152,7 @@ System.out.println(Iid+"    "+amount);
                Ld.restock(amount, Iid);
                showMenu(3);
            }else{
-               
+
                System.out.println("Restock Error!!\n");
                showMenu(3);
            }
@@ -211,6 +217,77 @@ System.out.println(Iid+"    "+amount);
 
             imp.topUp(LDid, amount);
             showMenu(6);
+        }else if(type == 9){
+            do {
+                System.out.println("Choose One Option Below :\n");
+                System.out.println("1.Add Consumer \n");
+                System.out.println("2.Add LocalDistributor\n");
+                System.out.println("3.Add Importer\n");
+                System.out.println("4.TopUp Importer\n");
+                System.out.println("5.Exit\n");
+
+                option = input.nextInt();
+            }while (option <0 || option >5);
+
+
+            if(option == 1){
+                showMenu(10);
+            }else if(option == 2){
+                showMenu(11);
+            }else if (option == 3){
+                showMenu(12);
+            }else if(option == 4){
+                showMenu(13);
+            }else {
+                showMenu(0);
+            }
+        }else if(type == 10){
+            System.out.println("Enter Consumer Name:\n");
+            String Cname = input.nextLine();
+            System.out.println("Enter Password :\n");
+            String Cpass = input.nextLine();
+
+            adm.addUser(Cname,Cpass,1,0,0,0,0);
+            showMenu(9);
+
+
+        }else if(type == 11){
+            System.out.println("Enter LocalDistributor Name:\n");
+            String Cname = input.nextLine();
+            System.out.println("Enter Password :\n");
+            String Cpass = input.nextLine();
+            System.out.println("Enter Max Refil Amount :\n");
+            int max = input.nextInt();
+            System.out.println("Enter Price :\n");
+            double ldprice = input.nextDouble();
+
+
+
+            System.out.println(adm.addUser(Cname,Cpass,2,0,max,0,ldprice));
+            showMenu(9);
+
+        }else if(type == 12){
+            System.out.println("Enter Importer Name:\n");
+            String Cname = input.nextLine();
+            System.out.println("Enter Password :\n");
+            String Cpass = input.nextLine();
+            System.out.println("Enter Max Refil Amount :\n");
+            int max = input.nextInt();
+            System.out.println("Enter Price :\n");
+            double impprice = input.nextDouble();
+
+
+
+            adm.addUser(Cname,Cpass,3,max,0,impprice,0);
+            showMenu(9);
+
+        }else if(type == 13){
+            System.out.println("Enter importer ID:\n");
+            int Impid = input.nextInt();
+            System.out.println("Enter Amount :\n");
+            int amnt = input.nextInt();
+            adm.topUp(Impid,amnt);
+            showMenu(9);
         }
     }
 
@@ -255,5 +332,32 @@ System.out.println(Iid+"    "+amount);
         }
 
 
+    }
+    public static int logout(String Uid){
+        con = new Database();
+        PreparedStatement ps;
+        ResultSet rs;
+
+        String query = "Update users SET login_status = ? where Uid = ? ";
+
+
+
+        try {
+            ps = Database.Connect().prepareStatement(query);
+
+            ps.setInt(1, 0);
+            ps.setString(2, Uid);
+
+            ps.executeUpdate();
+            System.out.println("Logged Out !!\nBye !!\n");
+            return 1;
+
+
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return 0;
+
+        }
     }
 }
